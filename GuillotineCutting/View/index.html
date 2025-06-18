@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>Bin Packing</title>
+  <link href='../View/demo.css' rel='stylesheet' type='text/css' media='screen' />
+</head>
+<body>
+
+  <h1>Розкрій листового матеріалу</h1>
+
+  <div id="container">
+    <fieldset id="settings">
+      <legend>Налаштування</legend>
+
+      <div class='size'>
+        <label for='size' class="blockLabel">Розмір листа (см) <span class='example'><b>W</b>x<b>H</b></span></label>
+        <br>
+        <input id="size_w" value="" size="5"><ul id="dropdownSW" class="dropdown-list"></ul>x<input id="size_h"  value="" size="5"><ul id="dropdownSH" class="dropdown-list"></ul><div class="size_report" id="size_report">Обмеження до 3000см!</div>
+      </div>
+
+      <div class='blocks'>
+        <label for='blocks'>Деталі (см) <span class='example'><b>W</b>x<b>H</b>x<b>N</b></span></label>
+        <br>
+        <input id="block_w" value="" size="5"><ul id="dropdownW" class="dropdown-list"></ul>x<input id="block_h"  value="" size="5"><ul id="dropdownH" class="dropdown-list"></ul>x<input id="block_n"  value="" size="5"><ul id="dropdownN" class="dropdown-list"></ul>
+        <button name="add_block" id="add_block">Додати деталь</button>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle_details">
+          <span class="slider"></span>
+        </label>
+        <div id="details" class="details"></div>
+        <div>
+      <label for="algorithm_select">Виберіть алгоритм:</label>
+      <select id="algorithm_select">
+        <option value="best_fit">Best Fit</option>
+        <option value="genetic">Genetic</option>
+        <option value="ant_colony">Ant colony</option>
+        <option value="simulated_annealing">Simulated annealing</option>
+        <option value="hybrid_genetic">Hybrid Genetic</option>
+      </select>
+    </div>
+      <button name="run_button" id="run_button">Запустити алгоритм</button>
+      <br>
+      <div id="execution_time" class="info-box">Час виконання: 0 мс</div>
+      <div id="efficiency" class="info-box">Оцінка: 0%</div>
+      <div id="numSheets" class="info-box">Кількість листів: 0 шт</div>
+        <button name="edit_block" id="edit_block" >Редагувати д. №</button>
+        <input id="edit_block_n" value="" size="1">
+        <input id="edit_block_w" value="" size="1">x<input id="edit_block_h" value="" size="1">    
+      </div>
+
+     <!--  <div class="ratio">
+        Заповнено: <span id='ratio'>0</span>%
+      </div> -->
+
+      <div id="numSheets" class="numSheets"></div>
+      <button name="saveToPdf" id="saveToPdf" onclick="canvas.saveToPdf()">Зберегти результат у PDF</button>
+      <span id="definitions">*W - широта<br>*H - висота<br> *N - кількість</span>
+    </fieldset>
+
+    <!-- <div id="results"> -->
+      <div id="packing">
+        <canvas id="canvas">
+          <div id="unsupported">
+            Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
+          </div>
+        </canvas>
+      </div>
+    <!-- </div> -->
+  </div>
+
+  <script src='../Libraries/jquery.js'></script>
+  <script src='../Libraries/jspdf.min.js'></script>
+  <script src='../Controller/demo.js'></script>
+  <script src='../Model/Block.js'></script>
+  <script src='../Model/Sheet.js'></script>
+  <script src='../View/canvas.js'></script>
+  <script src='../Model/details.js'></script>
+  <!-- <script src='../Model/geneticAlgorithm.js'></script> -->
+  <script src='../Model/BestFit.js'></script>
+  <script src='../Model/antColonyAlgorithm.js'></script>
+  <script src='../Model/simulatedAnnealing.js'></script>
+  <script src='../Model/hybridGeneticAlgorithm.js'></script>
+  <script src='../Model/geneticAlgorithm.js'></script>
+</body>
+</html>
+
