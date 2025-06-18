@@ -14,7 +14,7 @@ function areRectanglesIntersecting(rect1, rect2) {
     return true;
 }
 
-// Проверка гильотинности размещения блоков на листе
+// Check if the placement of blocks on the sheet is guillotine
 function isGuillotine(blocks, sheetWidth, sheetHeight) {
     let areas = [{ x: 0, y: 0, w: sheetWidth, h: sheetHeight }];
     for (let i = 0; i < blocks.length; i++) {
@@ -29,7 +29,7 @@ function isGuillotine(blocks, sheetWidth, sheetHeight) {
                 bx === area.x && by === area.y &&
                 w <= area.w && h <= area.h
             ) {
-                // Проверка на пересечение с предыдущими
+                // Check for intersection with previous blocks
                 let ok = true;
                 for (let k = 0; k < i; k++) {
                     let prev = blocks[k];
@@ -39,7 +39,7 @@ function isGuillotine(blocks, sheetWidth, sheetHeight) {
                     }
                 }
                 if (!ok) continue;
-                // После размещения делим область только на две части (гильотинный разрез)
+                // After placement, split the area into only two parts (guillotine cut)
                 let newAreas = [];
                 if (area.w - w > 0) {
                     newAreas.push({ x: area.x + w, y: area.y, w: area.w - w, h: h });
@@ -47,7 +47,7 @@ function isGuillotine(blocks, sheetWidth, sheetHeight) {
                 if (area.h - h > 0) {
                     newAreas.push({ x: area.x, y: area.y + h, w: area.w, h: area.h - h });
                 }
-                // Остальные области не трогаем
+                // Do not touch the other areas
                 for (let k = 0; k < areas.length; k++) {
                     if (k !== j) newAreas.push(areas[k]);
                 }
@@ -61,7 +61,7 @@ function isGuillotine(blocks, sheetWidth, sheetHeight) {
     return true;
 }
 
-// Получить свободные гильотинные области
+// Get free guillotine areas
 function getFreeGuillotineAreas(blocks, sheetWidth, sheetHeight) {
     let areas = [{ x: 0, y: 0, w: sheetWidth, h: sheetHeight }];
     for (const block of blocks) {
@@ -87,7 +87,7 @@ function getFreeGuillotineAreas(blocks, sheetWidth, sheetHeight) {
     return areas;
 }
 
-// Генерация случайного гильотинного раскроя (начальное решение)
+// Generate a random guillotine cutting (initial solution)
 function generateInitialSolution(blocks, sheetWidth, sheetHeight) {
     let remaining = blocks.slice();
     let sheets = [];
@@ -147,11 +147,11 @@ function generateInitialSolution(blocks, sheetWidth, sheetHeight) {
     return sheets;
 }
 
-// Мутация решения: генерация соседа
+// Mutation of the solution: generate a neighbor
 function generateNeighbor(sheets, sheetWidth, sheetHeight) {
     let newSheets = sheets.map(sheet => sheet.map(b => ({ ...b })));
     let mutationType = Math.random();
-    // 1. Перестановка двух блоков на одном листе
+    // 1. Swap two blocks on one sheet
     if (mutationType < 0.33) {
         let sheetIdx = Math.floor(Math.random() * newSheets.length);
         let sheet = newSheets[sheetIdx];
@@ -165,7 +165,7 @@ function generateNeighbor(sheets, sheetWidth, sheetHeight) {
             newSheets[sheetIdx] = newSheet;
         }
     }
-    // 2. Смена ориентации блока
+    // 2. Change block orientation
     else if (mutationType < 0.66) {
         let sheetIdx = Math.floor(Math.random() * newSheets.length);
         let sheet = newSheets[sheetIdx];
@@ -180,7 +180,7 @@ function generateNeighbor(sheets, sheetWidth, sheetHeight) {
             newSheets[sheetIdx] = newSheet;
         }
     }
-    // 3. Перемещение блока в случайную допустимую область
+    // 3. Move block to a random valid area
     else {
         let sheetIdx = Math.floor(Math.random() * newSheets.length);
         let sheet = newSheets[sheetIdx];
@@ -223,7 +223,7 @@ function generateNeighbor(sheets, sheetWidth, sheetHeight) {
     return newSheets;
 }
 
-// Оценка решения: энергия (чем больше, тем лучше, возвращаем заполненность)
+// Solution evaluation: energy (the higher, the better, returns fill ratio)
 function calculateEnergy(sheets, sheetWidth, sheetHeight) {
     let usedArea = 0;
     sheets.forEach(sheet => {
@@ -235,7 +235,7 @@ function calculateEnergy(sheets, sheetWidth, sheetHeight) {
     return usedArea / totalArea; // energy: чем больше, тем лучше
 }
 
-// Основной алгоритм симуляции отжига
+// Main simulated annealing algorithm
 function runSimulatedAnnealing(blocks, sheetWidth, sheetHeight, options = {}) {
     const {
         initialTemperature = 1000.0,
@@ -254,7 +254,7 @@ function runSimulatedAnnealing(blocks, sheetWidth, sheetHeight, options = {}) {
         let newSolution = generateNeighbor(currentSolution, sheetWidth, sheetHeight);
         let newEnergy = calculateEnergy(newSolution, sheetWidth, sheetHeight);
 
-        // Теперь максимизируем энергию: принимаем лучшее или худшее с вероятностью
+        // Now maximize energy: accept better or worse with probability
         if (newEnergy > currentEnergy || Math.random() < Math.exp((newEnergy - currentEnergy) / temperature)) {
             currentSolution = newSolution;
             currentEnergy = newEnergy;
@@ -266,7 +266,7 @@ function runSimulatedAnnealing(blocks, sheetWidth, sheetHeight, options = {}) {
         temperature *= alpha;
     }
 
-    // Преобразуем результат к формату [{width, height, blocks: [...]}, ...]
+    // Convert result to format [{width, height, blocks: [...]}, ...]
     return bestSolution.map(sheet => ({
         width: sheetWidth,
         height: sheetHeight,
@@ -279,5 +279,5 @@ function runSimulatedAnnealing(blocks, sheetWidth, sheetHeight, options = {}) {
     }));
 }
 
-// Экспорт для использования в других модулях
+// Export for use in other modules
 //module.exports = { runSimulatedAnnealing };

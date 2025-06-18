@@ -1,15 +1,15 @@
 /**
- * Новый генетический алгоритм гильотинного раскроя с корректным гильотинным размещением блоков.
- * Формат входа/выхода: массив листов с blocks, где block: {w, h, num}, x, y, orientation.
+ * New genetic algorithm for guillotine cutting with correct guillotine placement of blocks.
+ * Input/output format: array of sheets with blocks, where block: {w, h, num}, x, y, orientation.
  */
 function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, sheetWidth, sheetHeight, initialPopulation, crossoverType) {
     function getRandomNumber(min, max) {
         return Math.random() * (max - min) + min;
     }
 
-    // Проверка пересечения как в geneticWITHOUTGuillotine
+    // Check for intersection
     function areRectanglesIntersecting(rect1, rect2) {
-        // Аналогично geneticWITHOUTGuillotine.js.js
+
         let rect1Width, rect1Height, rect2Width, rect2Height;
         if (rect1.orientation === "horizontal") {
             rect1Width = rect1.h;
@@ -36,7 +36,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return true;
     }
 
-    // Проверка, что размещение гильотинное (каждый блок размещён в левом верхнем углу свободной области)
+    // Check that the placement is guillotine (each block is placed in the top-left corner of a free area)
     function isGuillotine(blocks, sheetWidth, sheetHeight) {
         let areas = [{ x: 0, y: 0, w: sheetWidth, h: sheetHeight }];
         for (let i = 0; i < blocks.length; i++) {
@@ -84,7 +84,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return true;
     }
 
-    // Получить свободные гильотинные области (только после последовательных разрезов)
+    // Get free guillotine areas (only after sequential cuts)
     function getFreeGuillotineAreas(blocks, sheetWidth, sheetHeight) {
         let areas = [{ x: 0, y: 0, w: sheetWidth, h: sheetHeight }];
         for (const block of blocks) {
@@ -111,11 +111,11 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return areas;
     }
 
-    // Генерация случайного гильотинного раскроя (размещаем блоки только в левом углу свободной области)
+    // Generate a random guillotine cutting (place blocks only in the top-left corner of a free area)
     function createRandomGuillotineCutting(blocks, sheetWidth, sheetHeight) {
         const sheets = [];
         let remaining = blocks.slice();
-        const MAX_ATTEMPTS = 1000; // Ограничение на количество попыток расстановки
+        const MAX_ATTEMPTS = 1000; // Limit on the number of placement attempts
         while (remaining.length > 0) {
             let placed = [];
             let used = Array(remaining.length).fill(false);
@@ -201,12 +201,12 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return population;
     }
 
-    // Мутация: три вида — перестановка, смена ориентации, перемещение в допустимую область, а также перенос блока между листами (с гильотинными ограничениями)
+    // Mutation: four types — swap, orientation change, move to valid area, and move block between sheets (with guillotine constraints)
     function mutate(individual, mutationRate, sheetWidth, sheetHeight) {
         let sheets = individual.sheets.map(sheet => sheet.map(b => ({ ...b })));
         if (Math.random() < mutationRate) {
             const mutationType = Math.random();
-            // 1. Перестановка двух блоков на одном листе
+            // 1. Swap two blocks on one sheet
             if (mutationType < 0.25) {
                 let sheetIdx = Math.floor(Math.random() * sheets.length);
                 let sheet = sheets[sheetIdx];
@@ -220,7 +220,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
                     sheets[sheetIdx] = newSheet;
                 }
             }
-            // 2. Смена ориентации блока (если возможно)
+            // 2. Change block orientation (if possible)
             else if (mutationType < 0.5) {
                 let sheetIdx = Math.floor(Math.random() * sheets.length);
                 let sheet = sheets[sheetIdx];
@@ -235,7 +235,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
                     sheets[sheetIdx] = newSheet;
                 }
             }
-            // 3. Перемещение блока в случайную допустимую область (левый верхний угол свободной области)
+            // 3. Move block to a random valid area (top-left corner of free area)
             else if (mutationType < 0.75) {
                 let sheetIdx = Math.floor(Math.random() * sheets.length);
                 let sheet = sheets[sheetIdx];
@@ -275,8 +275,8 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
                     }
                 }
             }
-            // 4. Перенос блока между листами (если листов больше одного)
-            //else {
+            // 4. Move block between sheets (if more than one sheet)
+            else {
                 if (sheets.length > 1) {
                     let fromSheetIdx = Math.floor(Math.random() * sheets.length);
                     let toSheetIdx = Math.floor(Math.random() * sheets.length);
@@ -324,7 +324,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
                         }
                     }
                 }
-            //}
+            }
         }
         return sheets;
     }
@@ -557,7 +557,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         let blocks2 = [];
         parent2.sheets.forEach((sheet, idx) => sheet.forEach(b => blocks2.push({ ...b, sheetIndex: idx })));
         let size = blocks1.length;
-        let maxAttempts = 10; // Ограничение числа попыток
+        let maxAttempts = 10; // Limit number of attempts
         let attempt = 0;
 
         function pmx(parentA, parentB, start, end) {
@@ -636,7 +636,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
             }
             attempt++;
         }
-        // Если не удалось получить валидные потомки за maxAttempts, вернуть родителей
+        // If valid offspring not obtained in maxAttempts, return parents
         return [parent1, parent2];
     }
 
@@ -669,7 +669,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return (usedArea / totalArea);
     }
  
-    /* // Эффективность размещения: отношение занятой площади к минимальному прямоугольнику, покрывающему все блоки
+    /* // Placement efficiency: ratio of occupied area to the minimal rectangle covering all blocks
     function calculateEfficiency(sheets) {
         let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
         sheets.forEach(sheet => {
@@ -686,12 +686,12 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
                 return blockSum + (block.w ? block.w * block.h : block.block.w * block.block.h);
             }, 0);
         }, 0);
-        return (usedArea / totalArea) - sheets.length * 100000; // Возвращаем в процентах
+        return (usedArea / totalArea) - sheets.length * 100000; // Return as percentage
     }
 
     function evaluateFitness(sheets, sheetWidth, sheetHeight) {
-        // sheets - массив листов, каждый лист - массив блоков
-        // Для совместимости с calculateEfficiency, преобразуем к формату [{blocks: [...]}, ...]
+        // sheets - array of sheets, each sheet - array of blocks
+        // For compatibility with calculateEfficiency, convert to format [{blocks: [...]}, ...]
         let sheetsForEfficiency = sheets.map(sheet => ({
             blocks: sheet.map(b => ({
                 x: b.x,
@@ -702,7 +702,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
             }))
         }));
         let efficiency = calculateEfficiency(sheetsForEfficiency);
-        // Сильно штрафуем за количество листов, эффективность — второстепенно
+        // Strongly penalize for number of sheets, efficiency is secondary
         return efficiency;
     }
  */
@@ -727,12 +727,12 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         return [parent1, parent2];
     }
 
-    // Используем initialPopulation, если передан
+    // Use initialPopulation if provided
     let population = initialPopulation && Array.isArray(initialPopulation) && initialPopulation.length === populationSize
         ? initialPopulation
         : createInitialPopulation(populationSize, blocks, sheetWidth, sheetHeight);
 
-    // --- Додаємо лічильник спроб без покращення ---
+    // --- Add counter for attempts without improvement ---
     let bestFitness = -Infinity;
     let bestIndividual;
     let noImprovementTries = 0;
@@ -751,7 +751,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         }
         population = newPopulation;
 
-        // Оценка найкращего індивіда в поточному поколінні
+        // Evaluate the best individual in the current generation
         let generationBestFitness = -Infinity;
         let generationBestIndividual = null;
         for (let i = 0; i < population.length; i++) {
@@ -770,7 +770,7 @@ function runGeneticAlgorithm(populationSize, mutationRate, generations, blocks, 
         }
     }
 
-    // Якщо bestIndividual ще не визначено (наприклад, якщо populationSize = 0)
+    // If bestIndividual is still undefined (e.g., if populationSize = 0)
     if (!bestIndividual) {
         for (let i = 0; i < population.length; i++) {
             const fitness = evaluateFitness(population[i].sheets, sheetWidth, sheetHeight);

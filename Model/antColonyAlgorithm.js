@@ -1,13 +1,13 @@
 function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100, alpha = 1, beta = 2, evaporation = 0.5) {
-    // --- 1. Инициализация феромонов ---
-    // Ключ: `${blockIdx}_${x}_${y}_${orientation}`
+    // --- 1. Pheromone initialization ---
+    // Key: `${blockIdx}_${x}_${y}_${orientation}`
     const pheromones = {};
     const getKey = (blockIdx, x, y, orientation) => `${blockIdx}_${x}_${y}_${orientation}`;
 
-    // Дискретизация координат (чтобы не было слишком много вариантов)
+    // Discretize coordinates (to avoid too many options)
     const step = Math.max(1, Math.floor(Math.min(sheetWidth, sheetHeight) / 20));
 
-    // Инициализация феромонов для всех возможных позиций и ориентаций
+    // Initialize pheromones for all possible positions and orientations
     for (let b = 0; b < blocks.length; b++) {
         for (let orientation of ["vertical", "horizontal"]) {
             let w = orientation === "vertical" ? blocks[b].w : blocks[b].h;
@@ -23,16 +23,16 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
     let bestSolution = null;
     let bestFitness = -Infinity;
 
-    // --- Додаємо лічильник спроб без покращення ---
+    // --- Add counter for attempts without improvement ---
     let noImprovementTries = 0;
     const maxNoImprovementTries = 200;
 
-    // --- 2. Основний цикл ACO ---
+    // --- 2. Main ACO loop ---
     for (let iter = 0; iter < iterations; iter++) {
         if (noImprovementTries >= maxNoImprovementTries) break;
         const antSolutions = [];
         for (let ant = 0; ant < antCount; ant++) {
-            // Каждый муравей строит решение
+            // Each ant builds a solution
             let remaining = blocks.map((b, idx) => ({ ...b, idx }));
             let sheets = [];
             while (remaining.length > 0) {
@@ -48,7 +48,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                         for (let area of availableSpaces) {
                             if (w <= area.w && h <= area.h) {
                                 let x = area.x, y = area.y;
-                                // Эвристика: площадь блока
+                                // Heuristic: block area
                                 let heuristic = w * h;
                                 let pher = pheromones[getKey(block.idx, x, y, orientation)] || 1.0;
                                 candidates.push({
@@ -59,7 +59,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                         }
                     }
                     if (candidates.length === 0) continue;
-                    // Выбор кандидата по вероятности (рулетка)
+                    // Roulette wheel selection
                     let sumScore = candidates.reduce((s, c) => s + c.score, 0);
                     let r = Math.random() * sumScore;
                     let acc = 0, chosen = null;
@@ -71,7 +71,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                         }
                     }
                     if (!chosen) chosen = candidates[0];
-                    // Проверка на пересечение с уже размещёнными
+                    // Check for intersection with already placed blocks
                     let ok = true;
                     for (let b of placed) {
                         if (areRectanglesIntersecting(
@@ -83,17 +83,17 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                         }
                     }
                     if (!ok) continue;
-                    // Проверка гильотинности
+                    // Check guillotine property
                     let testPlaced = placed.concat([{
                         x: chosen.x, y: chosen.y, w: block.w, h: block.h, orientation: chosen.orientation, num: block.num
                     }]);
                     if (!isGuillotine(testPlaced, sheetWidth, sheetHeight)) continue;
-                    // Размещаем блок
+                    // Place block
                     placed.push({
                         x: chosen.x, y: chosen.y, w: block.w, h: block.h, orientation: chosen.orientation, num: block.num
                     });
                     used[i] = true;
-                    // Обновляем свободные области (гильотинный разрез)
+                    // Update free areas (guillotine cut)
                     let areaIdx = availableSpaces.findIndex(a => a.x === chosen.x && a.y === chosen.y && a.w >= chosen.w && a.h >= chosen.h);
                     if (areaIdx !== -1) {
                         let area = availableSpaces[areaIdx];
@@ -114,13 +114,13 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
             antSolutions.push(sheets);
         }
 
-        // --- 3. Оценка и обновление феромонов ---
-        // Испарение
+        // --- 3. Evaluation and pheromone update ---
+        // Evaporation
         for (let key in pheromones) {
             pheromones[key] *= (1 - evaporation);
             if (pheromones[key] < 1e-6) pheromones[key] = 1e-6;
         }
-        // Усиление феромонов на лучших решениях
+        // Reinforce pheromones on best solutions
         let improved = false;
         for (let sheets of antSolutions) {
             let fitness = calculateFitness(sheets, sheetWidth, sheetHeight);
@@ -129,7 +129,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                 bestSolution = sheets;
                 improved = true;
             }
-            // Усиливаем феромоны для всех размещённых блоков
+            // Strengthen pheromones for all placed blocks
             sheets.forEach((sheet) => {
                 sheet.forEach((b, idx) => {
                     let key = getKey(idx, b.x, b.y, b.orientation);
@@ -144,7 +144,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
         }
     }
 
-    // --- 4. Форматируем результат ---
+    // --- 4. Format result ---
     return bestSolution.map(sheet => ({
         width: sheetWidth,
         height: sheetHeight,
@@ -156,7 +156,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
         }))
     }));
 
-    // --- Вспомогательные функции ---
+    // --- Helper functions ---
     function areRectanglesIntersecting(rect1, rect2) {
         let rect1Width = rect1.orientation === "vertical" ? rect1.w : rect1.h;
         let rect1Height = rect1.orientation === "vertical" ? rect1.h : rect1.w;
@@ -187,7 +187,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                     bx === area.x && by === area.y &&
                     w <= area.w && h <= area.h
                 ) {
-                    // Проверка на пересечение с предыдущими
+                    // Check for intersection with previous blocks
                     let ok = true;
                     for (let k = 0; k < i; k++) {
                         let prev = blocks[k];
@@ -197,7 +197,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                         }
                     }
                     if (!ok) continue;
-                    // После размещения делим область только на две части (гильотинный разрез)
+                    // After placement, divide the area into two parts only (guillotine cut)
                     let newAreas = [];
                     if (area.w - w > 0) {
                         newAreas.push({ x: area.x + w, y: area.y, w: area.w - w, h: h });
@@ -205,7 +205,7 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
                     if (area.h - h > 0) {
                         newAreas.push({ x: area.x, y: area.y + h, w: area.w, h: area.h - h });
                     }
-                    // Остальные области не трогаем
+                    // Leave other areas untouched
                     for (let k = 0; k < areas.length; k++) {
                         if (k !== j) newAreas.push(areas[k]);
                     }
@@ -231,5 +231,5 @@ function runACO(blocks, sheetWidth, sheetHeight, antCount = 30, iterations = 100
     }
 }
 
-// Экспорт для использования в других модулях
+// Export for use in other modules
 //module.exports = { runACO };
